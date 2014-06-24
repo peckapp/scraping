@@ -5,6 +5,8 @@ require 'uri'
 require 'bloomfilter-rb'
 require 'logger'
 
+# Experimental crawler that traverses a site and prints out a parsed form of the RSS feeds
+
 class RSSCrawler
 
   @agent = Mechanize.new
