@@ -28,12 +28,11 @@ class RSSCrawler
 
   def self.crawl_loop
 
-    logger = Logger.new('logfile.log')
+    logger = Logger.new('rss_logfile.log')
     logger.level = Logger::DEBUG
 
     logger.debug("Created logger")
     logger.info("Program started")
-    logger.warn("Nothing to do!")
 
 
     while ! @crawl_queue.empty? do
