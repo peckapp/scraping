@@ -4,13 +4,14 @@ require 'feedjira'
 require 'uri'
 require 'bloomfilter-rb'
 require 'logger'
+require 'timeout'
 
 class Crawler
 
   attr_reader :pages_crawled
 
   def initialize(root_url, timeout=8, page_quantity=15000, bf_bits=15)
-    @agent = Mechanize.new
+    @agent = Mechanize.new{|a| a.ssl_version, a.verify_mode = 'SSLv3', OpenSSL::SSL::VERIFY_NONE}
     @agent.read_timeout = timeout
     @agent.open_timeout = timeout
 
@@ -78,6 +79,9 @@ class Crawler
 
         begin
           new_page = l.click
+          @crawl_queue.insert(0,new_page)
+        rescue Timeout::Error
+          logger.warn "TIMEOUT for HREF: #{l.href}"
         rescue Mechanize::ResponseCodeError => exception
           if exception.response_code == '403'
             new_page = exception.page
@@ -89,9 +93,7 @@ class Crawler
         # passes the current page to a block so that it can be appropriately processed
         yield new_page
 
-        @crawl_queue.insert(0,new_page)
-
-        sleep 2.0 + (2.0 * rand)
+        sleep + (1.0 * rand)
 
       end
     end
@@ -101,9 +103,10 @@ class Crawler
   def self.acceptable_link_format?(link)
     begin
       if link.uri.to_s.match(/#/) || link.uri.to_s.empty? then return false end # handles anchor links within the page
-      if (link.uri.scheme != "http") && (link.uri.scheme != "https") then return false end # handles other protocols like tel: and ftp:
-      # prevents download of media files, should be a better way to do this than by explicit checks for each type for all URIs
-      if link.uri.to_s.match(/.pdf|.jgp|.jgp2|.jpeg|.png|.gif/) then return false end
+      scheme = link.uri.scheme
+      if (scheme != nil) && (scheme != "http") && (scheme != "https") then return false end # eliminates non http,https, or relative links
+      # prevents download of media files, should be a better way to do this than by explicit checks for each type
+      if link.uri.to_s.match(/.pdf|.jgp|.jgp2|.png|.gif/) then return false end
     rescue
       return false
     end
@@ -111,8 +114,12 @@ class Crawler
   end
 
   def within_domain?(link)
-    if link.relative? then return true end # handles relative links within the site
-    URI(@root_url).route_to(link).host ? false : true
+    if link.relative?
+      true # handles relative links within the site
+    else
+      # matches the current links host with the top-level domain string of the root URI
+      link.host.match(@root_host.to_s) ? true : false
+    end
   end
 
 end

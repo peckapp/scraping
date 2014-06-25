@@ -3,12 +3,14 @@ require 'nokogiri'
 require 'feedjira'
 require 'uri'
 require 'bloomfilter-rb'
+require 'logger'
+require 'timeout'
 
 # Experimental crawler that traverses a site and prints out a parsed form of the RSS feeds
 
 class RSSCrawler
 
-  @agent = Mechanize.new
+  @agent = Mechanize.new{|a| a.ssl_version, a.verify_mode = 'SSLv3', OpenSSL::SSL::VERIFY_NONE}
   @agent.read_timeout = 8
   @agent.open_timeout = 8
 
@@ -21,6 +23,7 @@ class RSSCrawler
   @root_url = ARGV[0] ? ARGV[0] : "http://www.williams.edu" # command line input or default of williams website
   @root_uri = URI.parse(@root_url)
   @root_host = @root_uri.host.slice(@root_uri.host.index('.')+1..@root_uri.host.length)
+  puts "root_url: #{@root_url} root_uri: #{@root_uri} root_host: #{@root_host}"
 
   root_page = @agent.get(@root_url)
   @crawl_queue.insert(0,root_page) # inserts root into the crawl queue to start the process
@@ -28,6 +31,9 @@ class RSSCrawler
 
   def self.crawl_loop
     puts "Program started"
+
+    logger = Logger.new("rss_log_#{ARGV[1]}.log")
+    logger.level = Logger::INFO
 
     while ! @crawl_queue.empty? do
       page = @crawl_queue.pop
@@ -42,7 +48,7 @@ class RSSCrawler
 
       puts "\n\n||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||"
       puts "queue contains: #{@crawl_queue.count.to_s} with #{@pages_crawled} scraped so far"
-      puts "page: #{page.title.to_s} with #{page.links.count} links"
+      puts "page: #{page.title.to_s.strip} at #{page.uri.to_s} with #{page.links.count} links"
       puts "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||\n\n"
 
       page.links.each do |l|
@@ -57,12 +63,14 @@ class RSSCrawler
 
         next unless self.acceptable_link_format?(l)
 
+        # puts "#{l.uri.class} is relative? #{l.uri.relative?}"
         uri = l.uri
 
         if self.rss?(uri)
           puts "********************************"
-          puts "RSS: " + uri.to_s
+          puts "RSS: #{uri.to_s}"
           puts "********************************"
+          logger.info "RSS: #{uri.to_s}"
           @rss_feeds << uri
           # spawn a new thread to parse the rss feed site
           rss_scrape = Thread.new {
@@ -74,10 +82,21 @@ class RSSCrawler
 
         puts "ADDED TO QUEUE ^^^^^^^^^^^^^^^^^^^"
 
-        new_page = l.click
-        @crawl_queue.insert(0,new_page)
+        begin
+          new_page = l.click
+          @crawl_queue.insert(0,new_page)
+        rescue Timeout::Error
+          logger.warn "TIMEOUT for HREF: #{l.href}"
+          puts "TIMEOUT FOR ABOVE ^^^^^^^^^^^^^^"
+        rescue Mechanize::ResponseCodeError => exception
+          if exception.response_code == '403'
+            new_page = exception.page
+          else
+            logger.error "exception: #{exception} returned for uri: #{uri}" # Some other error, re-raise
+          end
+        end
 
-        sleep 2.0 + (2.0 * rand)
+        sleep (1.0 * rand)
 
       end
     end
@@ -105,8 +124,9 @@ class RSSCrawler
   def self.acceptable_link_format?(link)
     begin
       if link.uri.to_s.match(/#/) || link.uri.to_s.empty? then return false end # handles anchor links within the page
-      if (link.uri.scheme != "http") && (link.uri.scheme != "https") then return false end # handles other protocols like tel: and ftp:
-      # prevents download of media files, should be a better way to do this than by explicit checks for each type for all URIs
+      scheme = link.uri.scheme
+      if (scheme != nil) && (scheme != "http") && (scheme != "https") then return false end # eliminates non http,https, or relative links
+      # prevents download of media files, should be a better way to do this than by explicit checks for each type
       if link.uri.to_s.match(/.pdf|.jgp|.jgp2|.png|.gif/) then return false end
     rescue
       return false
@@ -115,9 +135,15 @@ class RSSCrawler
   end
 
   def self.within_domain?(link)
-    if link.relative? then return true end # handles relative links within the site
-    # matches the current links host with the top-level domain string of the root URI
-    link.host.match(@top_host.to_s)
+    if link.relative?
+      puts "link is relative"
+      true # handles relative links within the site
+    else
+      # matches the current links host with the top-level domain string of the root URI
+      result = link.host.match(@root_host.to_s) ? true : false
+      puts "#{link.host} matches #{@root_host} with result #{result}"
+      result
+    end
   end
 
   def self.rss?(link)
