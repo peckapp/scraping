@@ -9,7 +9,7 @@ Design Documentation written by Aaron Taylor
  - pulling useful information out of unstructured data
 
 
-## Creating the system
+## Creating the system - Planning
  To create a scalable system, it is helpful to break the system up into pieces which perform defined tasks within the process of gathering data to input to our system
 
  The first phase must establish training datasets which will allow the system to differentiate between pages that contain calendaring information in aggregate, those that contain information about specific events (likely linked to from the aggregate calendaring pages), and those that contain no calendaring information and are thus uninteresting to us. This will be the first stage of the process, cataloging the applicable pages or APIs for an institution so that they can be quickly scraped once in the system.
@@ -20,9 +20,30 @@ Design Documentation written by Aaron Taylor
 
  The fourth phase will inspect the outputted data scraped during the previous phase and verify that it is intelligible and in the proper format, while containing all the necessary information. If the scraped data passes the necessary tests, then it will be inputted into the database in the existing form. A certain small numbers of detected errors will be allowed and logged appropriately with appropriate notifications passed send to the administrator of the system. A number of errors amounting beyond the allowed total will trigger the analysis processes in phase 2 to be re-run for the offending URLs, notifying the system administrators as necessary.
 
- If all is well, the data outputted into the database in phase 4 will be immediately available to users of the app on the next executed database query. Possible additions to this system may include the ability for manual edits or additions to the results of the analysis processes, such as providing new training data to modify the algorithms and decision processes for selecting classes of each page instance, or
+ If all is well, the data outputted into the database in phase 4 will be immediately available to users of the app on the next executed database query. Possible additions to this system may include the ability for manual edits or additions to the results of the analysis processes, such as providing new training data to modify the algorithms and decision processes for selecting classes of each page instance, or even modification of the decision making models.
+
+### Challenges
+1. First Phase: Page Class Cataloging
+ - creating decision making models to determine page type
+ - which attributes to look for, what defined calendar information and how is this reflected in a website
+2. Second Phase: Page IE Analysis
+ - looking for grouped information specific to each event
+ - providing appropriate annotations applicable to the training set
+ - determining the best format to hand off to the scraping process for expedited repetitive scraping
+ - allowing for flexibility in the outputted models that will not break on daily updates, such as eliminating unnecessary tags or information that are overly explicit
+3. Third Phase: Automated Content Scraping
+ - spreading the load between sites to avoid being locked out by institutional systems
+ - handling changes in data format, ensuring that the process is as robust as possible
+ - executing graceful degredation in the case that something does break or get stuck
+4. Fourth Phase: Content Verification
+ - recognizing errors that passed through the analysis and scraping processes
+ - determining when a page analysis is sufficiently broken to result in its renewal
+
+## Implementation Plan
+How we're gonna do this.
 
 ## Production Scraping Process
+Step by step walk through of the deployed system. Will be adding details on the final implementation as they are determined and become available.
 
 ### New Institution
 
