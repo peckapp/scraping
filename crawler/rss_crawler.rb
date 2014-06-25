@@ -3,7 +3,6 @@ require 'nokogiri'
 require 'feedjira'
 require 'uri'
 require 'bloomfilter-rb'
-require 'logger'
 
 # Experimental crawler that traverses a site and prints out a parsed form of the RSS feeds
 
@@ -16,24 +15,19 @@ class RSSCrawler
   @crawl_queue = Array.new # using an array to prevent special threading features of actual queues in ruby
   # m = 150,000, k = 11, seed = 666
   @bf = BloomFilter::Native.new(size: 150000, hashes: 11, seed: 1)
+  @pages_crawled = 0
+  @rss_feeds = []
 
   @root_url = ARGV[0] ? ARGV[0] : "http://www.williams.edu" # command line input or default of williams website
   @root_uri = URI.parse(@root_url)
+  @root_host = @root_uri.host.slice(@root_uri.host.index('.')+1..@root_uri.host.length)
+
   root_page = @agent.get(@root_url)
-  @crawl_queue.insert(0,root_page)
-
-  @pages_crawled = 0
-
-  @rss_feeds = []
+  @crawl_queue.insert(0,root_page) # inserts root into the crawl queue to start the process
+  @bf.insert(root_page.link.href.to_s) # inserts root into the Bloomfilter to prevent repeated crawling
 
   def self.crawl_loop
-
-    logger = Logger.new('rss_logfile.log')
-    logger.level = Logger::DEBUG
-
-    logger.debug("Created logger")
-    logger.info("Program started")
-
+    puts "Program started"
 
     while ! @crawl_queue.empty? do
       page = @crawl_queue.pop
@@ -46,10 +40,10 @@ class RSSCrawler
 
       @pages_crawled += 1
 
-      logger.info "\n\n||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||"
-      logger.info "queue contains: #{@crawl_queue.count.to_s} with #{@pages_crawled} scraped so far"
-      logger.info "Starting page: " + page.title.to_s
-      logger.info "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||\n\n"
+      puts "\n\n||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||"
+      puts "queue contains: #{@crawl_queue.count.to_s} with #{@pages_crawled} scraped so far"
+      puts "page: #{page.title.to_s} with #{page.links.count} links"
+      puts "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||\n\n"
 
       page.links.each do |l|
 
@@ -59,17 +53,16 @@ class RSSCrawler
           next
         end
         @bf.insert(l.href.to_s)
-        logger.info "HREF: ~#{l.href}~"
+        puts "HREF: #{l.href}"
 
         next unless self.acceptable_link_format?(l)
 
         uri = l.uri
-        logger.info "LINK ^^^^^^^^^^^^^^^^^^^"
 
         if self.rss?(uri)
-          logger.info "********************************"
-          logger.info "RSS: " + uri.to_s
-          logger.info "********************************"
+          puts "********************************"
+          puts "RSS: " + uri.to_s
+          puts "********************************"
           @rss_feeds << uri
           # spawn a new thread to parse the rss feed site
           rss_scrape = Thread.new {
@@ -79,6 +72,8 @@ class RSSCrawler
 
         next unless self.within_domain?(uri)
 
+        puts "ADDED TO QUEUE ^^^^^^^^^^^^^^^^^^^"
+
         new_page = l.click
         @crawl_queue.insert(0,new_page)
 
@@ -86,7 +81,6 @@ class RSSCrawler
 
       end
     end
-    logger.close
   end
 
   # scrapes a given rss feed indicated by the string passed in of its uri
@@ -122,7 +116,8 @@ class RSSCrawler
 
   def self.within_domain?(link)
     if link.relative? then return true end # handles relative links within the site
-    @root_uri.route_to(link).host ? false : true
+    # matches the current links host with the top-level domain string of the root URI
+    link.host.match(@top_host.to_s)
   end
 
   def self.rss?(link)
