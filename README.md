@@ -1,12 +1,14 @@
-# Scraping
+# Scalable Information Extraction System
 
-Design Documentation written by Aaron Taylor
+Design Documentation by Aaron Taylor <br/>
+&copy; 2014 Peck, LLC. <br/>
+For Internal Distribution only
 
 ## Useful techniques
 - Machine Learning decision making
  - determining whether or not a page contains calendaring information
 - Information Extraction
- - pulling useful information out of unstructured data
+ - pulling useful information out of relatively unstructured data
 
 
 ## Creating the system - Planning
@@ -40,7 +42,9 @@ Design Documentation written by Aaron Taylor
  - determining when a page analysis is sufficiently broken to result in its renewal
 
 ## Implementation Plan
-How we're gonna do this.
+
+### Phase One
+- create
 
 ## Production Scraping Process
 Step by step walk through of the deployed system. Will be adding details on the final implementation as they are determined and become available.
@@ -68,3 +72,10 @@ Step by step walk through of the deployed system. Will be adding details on the 
 ## Utilized Open Source Software Libraries
 
 Chosen software libraries and their intended usage to be described here. Check the wiki for possible contenders.
+
+### Crawlers
+ - Nutch Web Crawler from the Apache project
+
+### Machine Learning Decision Making
+
+### Information Extraction

@@ -22,8 +22,9 @@ class RSSCrawler
 
   @root_url = ARGV[0] ? ARGV[0] : "http://www.williams.edu" # command line input or default of williams website
   @root_uri = URI.parse(@root_url)
+  puts "root_url: #{@root_url} root_uri: #{@root_uri}"
   @root_host = @root_uri.host.slice(@root_uri.host.index('.')+1..@root_uri.host.length)
-  puts "root_url: #{@root_url} root_uri: #{@root_uri} root_host: #{@root_host}"
+
 
   root_page = @agent.get(@root_url)
   @crawl_queue.insert(0,root_page) # inserts root into the crawl queue to start the process

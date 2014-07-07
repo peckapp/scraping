@@ -1,0 +1,115 @@
+
+
+
+
+
+
+
+
+
+<!-- BEGINNING -->
+<html>
+
+<!-- SIMPLE -->
+<head>
+	<title>SafeConnect: Your IP Address is - 137.165.166.253</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+	<script language="JavaScript" src="../js/util.js"></script>
+	<link rel="stylesheet" href="../css/message.css" type="text/css" />
+	<META HTTP-EQUIV="Pragma" CONTENT="no-cache">
+</head>
+
+<body style="font-family: Arial">
+
+<!-- JAVASCRIPT -->
+
+<div id="MASTHEAD">
+<p align="center">
+<img src="/images/masthead.jpg"></img>
+</p>
+</div>
+<div align="center">
+<table border="0" width="750" id="master2global3table">
+	<tr>
+		<td>
+<div id="TITLE">
+<h4 align="center"><font color="#000000">Important Message</font></h4>
+</div>
+<div id="GENERAL">
+<h5 align="center"><font color="#000000">In order to ensure a safe operating environment for users of the Williams network, all computers are required to run the Safeconnect client. This client verifies that your computer has anti-virus software that is up to date and that your computer is set to receive critical operating system updates. It has the same function as the Windows Security center that comes with Windows XP, Vista and 7 but it will alert OIT staff when there is a computer that is not compliant. Computers without anti-virus and critical updates are at a much greater risk of becoming infected with malware.
+</font></h5>
+</div>
+<div style="display: none;" id="warning">
+<h4 align="center"><font color="#000000"></font></h4>
+<!-- WARNING -->
+<h5 align="center"><font color="#000000"><p>Your computer is being evaluated for compliance with this policy.</p>
+After a minute or so, please try to navigate away from this page.</font></h5>
+</div>
+<div style="display: block;" id="quarantine">
+<h5 align="center"><font color="#000000"><p> <a href="javascript:popuppolicy('../html/policy.htm')">Click here to read 
+          the full Policy</a></p>
+        <p><a href="javascript:popup('../html/faq.htm')">Click here to read the FAQ</a></p>
+</font></h5>
+<!-- QUARANTINE -->
+<h5 align="center"><font color="#000000">
+
+	<div id="pcinstall">
+		<p><a href="javascript:Engagenow()">Yes, I will install the Policy Key and accept the terms and conditions for Internet Use</a></p>
+    </div> 
+
+<div id="pcserviceinstall">
+        <p><a href="javascript:EngagePCService()">Yes, I will install the Vista Policy Key and accept the terms and conditions for Internet Use</a></p>
+    </div>
+
+	<div id="macinstall">
+		<p><a href="javascript:EngageMACnow()">Yes, I will install the Macintosh Policy Key and accept the terms and conditions for Internet Use</a></p>
+    </div> 
+	
+	<p class="ClientbodyText">                    
+          When the initial File Download box comes up, please click "Open."          
+    </p>
+	    <p class="ClientbodyText"> Netscape &amp; FireFox users, please click 
+          "Save" and when the file finishes downloading, <br>
+	      click on the installer.</p>
+	      <p><a href="javascript:popupdecline('../html/decline.htm')">I DO NOT ACCEPT</a></p>
+    	
+	    <p class="ClientbodyText">If you click "I DO NOT ACCEPT&quot; you will 
+          not have internet access.</p>
+     
+
+
+<SCRIPT LANGUAGE="JavaScript"> 
+
+var ostype=new OSType();
+if (ostype.isMac){
+        oVDiv=document.getElementById("pcinstall").style.display="none";
+        oVDiv=document.getElementById("macinstall").style.display="block";
+        oVDiv=document.getElementById("pcserviceinstall").style.display="none";
+}
+else if (ostype.winvista) {
+        oVDiv=document.getElementById("pcinstall").style.display="none";
+        oVDiv=document.getElementById("macinstall").style.display="none";
+        oVDiv=document.getElementById("pcserviceinstall").style.display="block";
+}
+else {
+        oVDiv=document.getElementById("pcinstall").style.display="block";
+        oVDiv=document.getElementById("macinstall").style.display="none";
+        oVDiv=document.getElementById("pcserviceinstall").style.display="none";
+}
+
+</SCRIPT>
+</font></h5>
+</div>
+<!-- END MESSAGING -->
+			</td>
+		</tr>
+	</table>
+</div>
+<div id="FOOT">
+<p align="center">
+<img src="/images/footer.jpg"></img>
+</p>
+</div>
+<!-- ENDING -->
+</body>
+</html>
