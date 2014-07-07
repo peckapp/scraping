@@ -36,8 +36,6 @@ class Crawler
 
     logger.debug("Created logger")
     logger.info("Program started")
-    logger.warn("Nothing to do!")
-
 
     while ! @crawl_queue.empty? do
       page = @crawl_queue.pop
@@ -60,7 +58,7 @@ class Crawler
       page.links.each do |l|
 
         links_inspected += 1
-        STDOUT.write "\rqueue contains: #{@crawl_queue.count.to_s} with #{@pages_crawled} scraped so far and #{links_inspected} links inspected for the current page"
+        STDOUT.write "\rqueue contains: #{@crawl_queue.count.to_s} with #{@pages_crawled} scraped so far and #{links_inspected} links inspected for the current page: #{l.href}"
 
         # utilizes a bloom filter to keep track of links that have already been traversed
         if @bf.include?(l.href.to_s) then
@@ -93,7 +91,7 @@ class Crawler
         # passes the current page to a block so that it can be appropriately processed
         yield new_page
 
-        sleep + (1.0 * rand)
+        sleep 1 + rand
 
       end
     end
@@ -129,16 +127,19 @@ if __FILE__ == $0
   # starts the loop crawling the website
 
   rss_block = lambda { |page|
-    next unless page.uri.to_s.match(/rss/)
-    puts "RSS"
-    logger.info "********************************"
-    logger.info "RSS: " + page.uri.to_s
-    logger.info "********************************"
-    @rss_feeds << page.uri
-    # spawn a new thread to parse the rss feed site
-    rss_scrape = Thread.new {
-      crawler.scrape_uri(page.uri.to_s)
-    }
+    if page.uri.to_s.match(/rss/)
+      puts "RSS Block parsing"
+      logger.info "********************************"
+      logger.info "RSS: " + page.uri.to_s
+      logger.info "********************************"
+      @rss_feeds << page.uri
+      # spawn a new thread to parse the rss feed site
+      rss_scrape = Thread.new {
+        crawler.scrape_uri(page.uri.to_s)
+      }
+    else
+      # page wasn't rss
+    end
   }
 
   root = ARGV[1] ? ARGV[1] : "http://www.williams.edu"
@@ -146,7 +147,9 @@ if __FILE__ == $0
   begin
     puts "running crawler with root: #{root}"
     crawler = Crawler.new(root)
+
     crawler.crawl_loop &rss_block
+
   rescue Interrupt
     puts "\nended crawl"
   ensure

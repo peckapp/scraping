@@ -9,7 +9,8 @@ require 'timeout'
 # Experimental crawler that traverses a site and prints out a parsed form of the RSS feeds
 
 class RSSCrawler
-
+  # no verification because it failed on some pages and it isn't necessary for crawling.
+  # vulnerabilites can only be present here if a link from the institution site points to a somehow malicious rss feed
   @agent = Mechanize.new{|a| a.ssl_version, a.verify_mode = 'SSLv3', OpenSSL::SSL::VERIFY_NONE}
   @agent.read_timeout = 8
   @agent.open_timeout = 8
