@@ -3,6 +3,7 @@ require 'nokogiri'
 require 'watir-webdriver'
 
 require 'active_support/core_ext/date'
+require 'active_support/core_ext/string/filters'
 
 # require 'headless'
 # headless = Headless.new
@@ -14,7 +15,7 @@ MIDD_DATE_FORMAT = "%A, %B %-d, %Y"
 
 
 def self.menu_loop(b)
-  (0..30).each do |increment|
+  (0..5).each do |increment|
 
     puts "#{increment} days from now"
 
@@ -29,9 +30,17 @@ def self.menu_loop(b)
 
     apply_button.click
 
-    data = b.div :class => 'view view-menus-test view-id-menus_test view-display-id-page view-dom-id-163dd5c9ac75a8917cab3b5b23c99f07 jquery-once-1-processed'
+    data = b.div :class => 'view view-menus-test view-id-menus_test view-display-id-page'
 
-    self.scrape_html(data.html)
+    if data.exists?
+
+      html_raw = data.html
+
+      self.scrape_html(data.html.squish, date)
+
+    else
+      puts "couldn't find data!!!"
+    end
 
     sleep 1 + rand
 
@@ -39,10 +48,34 @@ def self.menu_loop(b)
 end
 
 
-def self.scrape_html(html_raw)
+def self.scrape_html(html_raw, date)
   html = Nokogiri::HTML(html_raw)
 
-  puts 'will be scraping'
+  puts 'scraping'
+
+  html.css("table[class*='views-view-grid']").each do |table|
+
+    place = table.previous.previous.text
+
+
+    table.css('td').each do |entry|
+      opportunity_type = entry.css('span[class=field-content]').text
+
+      entry.css('p').children.each do |item|
+        if ! item.text.blank?
+
+          item_name = item.text
+
+          mi = {item_name: item_name, opportunity_type: opportunity_type, place: place, date: date}
+
+          puts mi
+
+        end # end if
+      end # end entry items
+
+    end # end table entries
+
+  end # end tables
 
 end
 
