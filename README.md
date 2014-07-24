@@ -107,19 +107,27 @@ Just as with breaking up the system nto separate phases, structuring this data a
 
 ### Phase One: Crawling
 
-A crawler written in ruby currently has the ability to perform a breadth-first traversal of a website with a decent amount of reliability. More work is needed here to make the crawler more robust.
+A crawler written in ruby currently has the ability to perform a breadth-first traversal of a website with a decent amount of reliability. Each page that is found by the crawler is immediately handed off asynchronously to a worker of the Phase Two analysis that will look at the page to extract the necessary data from it. At this tim ePhase Two is quite rudimentary.
+
+More work is needed here to make the crawler more robust, as a variety of strange errors crop up from time to time and there are a few hacky fixes currently in place to avoid them that should be more directly implemented into the design of the crawler.
 
 ### Phase Two: Page Parsing
 
 For now, we have some rudimentary URL filters that find RSS and iCal feeds and store those in the database.
 
-For the initial round of institutions, most of this will likely be a manual process through the Admin pages for the Data Model used by phase 3.
+For the initial round of institutions, most of this will likely be a manual process through the Admin pages for the Data Model used by Phase Three for repeated scraping.
 
 ### Phase Three: Repeated Scraping
 
-Uses the information in the database to repeatedly scrape the web pages using `sidetiq`
+Uses the information in the database to repeatedly scrape the web pages using `sidetiq`. A master iterative process that operates repeatedly is what is used to dispatch other workers for a scrape task of each individual ScrapeResource, using SideKiq's queueing mechanism to make this system inherently scalable. these jobs are queued based on the iterative scraping master process and then executed as is possible. A randomized wait time could be added in this iterative loop to avoid flooding any specific server with our requests and getting us banned.
 
-The current system handles the fully nested
+The current system handles the single nested resources quite well, but additional complexity must be added in order to handle other cases. We may need to specify which case a page fall under in some cases in order to dynamically select the analysis or scraping tool that should be applied to it.
+
+At present, there are a few case-specific workers that would fall under this phase which wil be eliminated in favor of more general designs, but they are currently useful in providing content that is useful for the development of the app.
+
+#### Single-Nested
+
+The Single-nested worker is given a ScrapeResource from which is begins processing based on the resource's URL. It iterates over the instances of the top-level `Selector` and for each of these nodes, it looks within that scope for the data contained within the matching child selectors. For each iteration of an instance of a top-level seleector, it creates a new model which is then filled by the data could for each child selector. After the children have been iterated over for that instance of the top-level selector within the page, the new model is sent to the validation process in Phase Four.
 
 ### Phase Four
 
@@ -152,18 +160,21 @@ Step by step walk through of the deployed system. Will be adding details on the 
 
 ## Utilized Open Source Software Libraries
 
-Chosen software libraries and their intended usage to be described here. Check the wiki for possible contenders.
+Chosen software libraries and their intended specific usages within out framework to be described here. Check out the wiki for possible contenders.
 
 ### Ruby Gems
 - Nokogiri
  - highly capable HTML and XML parsing
  - Documentation: http://nokogiri.org
  - Source: https://github.com/sparklemotion/nokogiri
+ - We are using Nokogiri throughout the design framework, and is if the fundamental library through which the webpages are parsed and analyzed by our system. Nokogiri enables us to quickly drill down in a page's content to find what we want based on CSS selectors that are being stored in the data model.
 - Mechanize
  - link traversal and simple form submission
  - Documentation: http://docs.seattlerb.org/mechanize/
  - Source: https://github.com/sparklemotion/mechanize
+ - Mechanize is currently used primarily in the crawler as the method for traversing through the links of web pages. By automating the process of traversal though simple method calls, it allows us to focus on the intent of our specific application rather than the lower-level mechanize of crawling a website.
 - Watir Webdriver: wrapper for Selenium
+ - for cases where simple HTML analysis based on URL requests isn't enough, Selenium provides us with the ability to simulate a web browser that can process all the javascript that comes with a site's page and then give us the ability to interact solely with the resulting HTML while abstracting away from the underlying mechanisms which we really dont care about anyway in the context of scraping. This is a highly powerful and configurable tool that is applicable in the more complex situations that we may face.
 
 ### Crawlers
  - Nutch Web Crawler from the Apache project
