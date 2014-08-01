@@ -7,15 +7,14 @@ require 'logger'
 require 'timeout'
 
 class Crawler
-
   attr_reader :pages_crawled
 
-  def initialize(root_url, timeout=8, page_quantity=15000, bf_bits=15)
-    @agent = Mechanize.new{|a| a.ssl_version, a.verify_mode = 'SSLv3', OpenSSL::SSL::VERIFY_NONE}
+  def initialize(root_url, timeout = 8, page_quantity = 15_000, bf_bits = 15)
+    @agent = Mechanize.new { |a| a.ssl_version, a.verify_mode = 'SSLv3', OpenSSL::SSL::VERIFY_NONE }
     @agent.read_timeout = timeout
     @agent.open_timeout = timeout
 
-    @crawl_queue = Array.new # using an array to prevent special threading features of actual queues in ruby that block
+    @crawl_queue = [] # using an array to prevent special threading features of actual queues in ruby that block
 
     k = (0.7 * bf_bits).ceil
     @bf = BloomFilter::Native.new(size: page_quantity, hashes: k, seed: 1)
@@ -24,41 +23,40 @@ class Crawler
 
     # puts the starting seed page in the queue
     root_page = @agent.get(@root_url)
-    @crawl_queue.insert(0,root_page)
+    @crawl_queue.insert(0, root_page)
 
     @pages_crawled = 0 # incremented for every iteration of the main crawl loop
   end
 
   def crawl_loop
-
     logger = Logger.new('logfile.log')
     logger.level = Logger::DEBUG
 
-    logger.debug("Created logger")
-    logger.info("Program started")
+    logger.debug('Created logger')
+    logger.info('Program started')
 
-    while ! @crawl_queue.empty? do
+    until @crawl_queue.empty?
       page = @crawl_queue.pop
 
-      if page.kind_of? Mechanize::Image
+      if page.is_a? Mechanize::Image
         puts "Image in crawl queue for uri: #{page.uri}"
       end
 
-      next unless page.kind_of? Mechanize::Page
+      next unless page.is_a? Mechanize::Page
 
       @pages_crawled += 1
 
-      logger.info "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||"
-      logger.info "queue contains: #{@crawl_queue.count.to_s} with #{@pages_crawled} scraped so far"
-      logger.info "Starting page: " + page.title.to_s
-      logger.info "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||"
+      logger.info '||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||'
+      logger.info "queue contains: #{@crawl_queue.count} with #{@pages_crawled} scraped so far"
+      logger.info 'Starting page: ' + page.title.to_s
+      logger.info '||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||'
 
       links_inspected = 0
 
       page.links.each do |l|
 
         links_inspected += 1
-        STDOUT.write "\rqueue contains: #{@crawl_queue.count.to_s} with #{@pages_crawled} scraped so far and #{links_inspected} links inspected for the current page: #{l.href}"
+        STDOUT.write "\rqueue contains: #{@crawl_queue.count} with #{@pages_crawled} scraped so far and #{links_inspected} links inspected for the current page: #{l.href}"
 
         # utilizes a bloom filter to keep track of links that have already been traversed
         if @bf.include?(l.href.to_s) then
@@ -73,11 +71,11 @@ class Crawler
 
         next unless within_domain?(l.uri)
 
-        logger.info "above was within domain"
+        logger.info 'above was within domain'
 
         begin
           new_page = l.click
-          @crawl_queue.insert(0,new_page)
+          @crawl_queue.insert(0, new_page)
         rescue Timeout::Error
           logger.warn "TIMEOUT for HREF: #{l.href}"
         rescue Mechanize::ResponseCodeError => exception
@@ -102,7 +100,7 @@ class Crawler
     begin
       if link.uri.to_s.match(/#/) || link.uri.to_s.empty? then return false end # handles anchor links within the page
       scheme = link.uri.scheme
-      if (scheme != nil) && (scheme != "http") && (scheme != "https") then return false end # eliminates non http,https, or relative links
+      if (!scheme.nil?) && (scheme != 'http') && (scheme != 'https') then return false end # eliminates non http,https, or relative links
       # prevents download of media files, should be a better way to do this than by explicit checks for each type
       if link.uri.to_s.match(/.pdf|.jgp|.jgp2|.png|.gif/) then return false end
     rescue
@@ -119,19 +117,17 @@ class Crawler
       link.host.match(@root_host.to_s) ? true : false
     end
   end
-
 end
 
-
-if __FILE__ == $0
+if __FILE__ == $PROGRAM_NAME
   # starts the loop crawling the website
 
-  rss_block = lambda { |page|
+  rss_block = lambda do |page|
     if page.uri.to_s.match(/rss/)
-      puts "RSS Block parsing"
-      logger.info "********************************"
-      logger.info "RSS: " + page.uri.to_s
-      logger.info "********************************"
+      puts 'RSS Block parsing'
+      logger.info '********************************'
+      logger.info 'RSS: ' + page.uri.to_s
+      logger.info '********************************'
       @rss_feeds << page.uri
       # spawn a new thread to parse the rss feed site
       rss_scrape = Thread.new {
@@ -140,9 +136,9 @@ if __FILE__ == $0
     else
       # page wasn't rss
     end
-  }
+  end
 
-  root = ARGV[1] ? ARGV[1] : "http://www.williams.edu"
+  root = ARGV[1] ? ARGV[1] : 'http://www.williams.edu'
 
   begin
     puts "running crawler with root: #{root}"

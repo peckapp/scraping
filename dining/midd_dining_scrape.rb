@@ -9,10 +9,9 @@ require 'active_support/core_ext/string/filters'
 # headless = Headless.new
 # headless.start
 
-MIDD_MENUS = "http://menus.middlebury.edu"
+MIDD_MENUS = 'http://menus.middlebury.edu'
 
-MIDD_DATE_FORMAT = "%A, %B %-d, %Y"
-
+MIDD_DATE_FORMAT = '%A, %B %-d, %Y'
 
 def self.menu_loop(b)
   (0..5).each do |increment|
@@ -30,13 +29,13 @@ def self.menu_loop(b)
 
     apply_button.click
 
-    data = b.div :class => 'view view-menus-test view-id-menus_test view-display-id-page'
+    data = b.div class: 'view view-menus-test view-id-menus_test view-display-id-page'
 
     if data.exists?
 
       html_raw = data.html
 
-      self.scrape_html(data.html.squish, date)
+      scrape_html(data.html.squish, date)
 
     else
       puts "couldn't find data!!!"
@@ -47,7 +46,6 @@ def self.menu_loop(b)
   end
 end
 
-
 def self.scrape_html(html_raw, date)
   html = Nokogiri::HTML(html_raw)
 
@@ -57,16 +55,15 @@ def self.scrape_html(html_raw, date)
 
     place = table.previous.previous.text
 
-
     table.css('td').each do |entry|
       opportunity_type = entry.css('span[class=field-content]').text
 
       entry.css('p').children.each do |item|
-        if ! item.text.blank?
+        unless item.text.blank?
 
           item_name = item.text
 
-          mi = {item_name: item_name, opportunity_type: opportunity_type, place: place, date: date}
+          mi = { item_name: item_name, opportunity_type: opportunity_type, place: place, date: date }
 
           puts mi
 
@@ -76,15 +73,13 @@ def self.scrape_html(html_raw, date)
     end # end table entries
 
   end # end tables
-
 end
-
 
 begin
   b = Watir::Browser.new
   b.goto MIDD_MENUS
   puts 'entering loop'
-  self.menu_loop(b)
+  menu_loop(b)
 rescue
   raise
 ensure

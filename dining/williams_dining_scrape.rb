@@ -3,8 +3,7 @@
 require 'restclient'
 require 'csv'
 
-
-CSV_URL = "http://dining.williams.edu/files/daily-menu.csv"
+CSV_URL = 'http://dining.williams.edu/files/daily-menu.csv'
 
 file = RestClient.get(CSV_URL)
 
