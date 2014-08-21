@@ -17,7 +17,7 @@ For Internal Distribution only
 
  The second phase of the process is to create a system to gather the necessary information to systematically extract calendaring data from the cataloged websites. This process should ascertain the CSS selectors or other identifying features of the calendaring information within the HTML code and then catalog these specific attributes so that the iterative scraping process can be as efficient as possible and not require additional processing for material that has already been analyzed.
 
- The third phase utilizes the results of the previous analyses of the site to scrape the institutional websites at automated intervals. This system will accept as input a set of URLs and associated with each of these will be a set of CSS selectors to locate the relevant calendaring information. If the webpage is of the same of similar format as at the time when the analysis was done, this information will be gathered and stored locally for final verification. This framework can be designed such that it is not specific to calendaring information or institutional websites, but rather a generalized scraping process based on structured input.
+ The third phase utilizes the results of the previous analyses of the site to scrape the institutional websites at automated intervals. This system will accept as input a set of URLs that match a given type of webpage. Associated with each of these types will be a set of CSS selectors to locate the relevant calendaring information. Each of these selectors is in turn related to a structured piece of data stored within our system. This piece of structured data can either be a simple value for a column within a model, or it may relate to an item within an entire other model. If the webpage is of the same or similar format as at the time when the analysis was done, this information will be gathered and stored locally for final verification. This framework can be designed such that it is not specific to calendaring information or institutional websites, but rather a generalized scraping process based on structured input in the form of CSS-selector based descriptions of the website's format.
 
  The fourth phase will inspect the outputted data scraped during the previous phase and verify that it is intelligible and in the proper format, while containing all the necessary information. If the scraped data passes the necessary tests, then it will be inputted into the database in the existing form. A certain small numbers of detected errors will be allowed and logged appropriately with appropriate notifications passed send to the administrator of the system. A number of errors amounting beyond the allowed total will trigger the analysis processes in phase 2 to be re-run for the offending URLs, notifying the system administrators as necessary.
 
@@ -33,7 +33,8 @@ For Internal Distribution only
  - determining the best format to hand off to the scraping process for expedited repetitive scraping
  - allowing for flexibility in the outputted models that will not break on daily updates, such as eliminating unnecessary tags or information that are overly explicit
 3. Third Phase: Automated Content Scraping
- - spreading the load between sites to avoid being locked out by institutional systems
+ - spreading the load between sites to work in parellel and avoid being locked out by a single institutional systems
+ - linking stored items with other resources, such as a department or team
  - handling changes in data format, ensuring that the process is as robust as possible
  - executing graceful degradation in the case that something does break or get stuck
 4. Fourth Phase: Content Verification

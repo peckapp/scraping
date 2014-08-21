@@ -2,24 +2,31 @@ require 'restclient'
 require 'nokogiri'
 require 'watir-webdriver'
 
-@url = 'https://events.williams.edu/calendar/month/2014/8'
+require 'active_support/core_ext/date'
+require 'active_support/core_ext/string/filters'
 
-def retrieve_html
-  raw = RestClient::Request.execute(url: @url, method: :get, verify_ssl: false)
-  Nokogiri::HTML(raw)
+@url = 'https://events.williams.edu/calendar/'
+
+def retrieve_html(url)
+  raw = RestClient::Request.execute(url: url, method: :get, verify_ssl: false)
+  Nokogiri::HTML(raw.squish)
+end
+
+def parse_page(url)
+  html = retrieve_html(url)
+
 end
 
 def iterate_html
   puts 'iterating'
-  html = retrieve_html
+  html = retrieve_html(@url)
   html.css('.summary a').each do |title|
     unless title.class == Nokogiri::XML::Element
       puts 'anamolous title with multiple elements' if title.count > 1
       title = title.first
     end
-    puts "title: #{title}"
     link = title.attributes['href']
-    puts "link: #{link}"
+    parse_page(link)
   end
 end
 
